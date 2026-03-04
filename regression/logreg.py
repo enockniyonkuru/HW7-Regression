@@ -119,7 +119,7 @@ class LogisticRegressor(BaseRegressor):
     
     def make_prediction(self, X) -> np.array:
         """
-        TODO: Implement logistic function to get estimates (y_pred) for input X values. The logistic
+        Implement logistic function to get estimates (y_pred) for input X values. The logistic
         function is a transformation of the linear model into an "S-shaped" curve that can be used
         for binary classification.
 
@@ -129,11 +129,13 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             The predicted labels (y_pred) for given X.
         """
-        pass
+        # Compute linear combination of inputs and weights, then apply sigmoid
+        z = X @ self.W
+        return 1 / (1 + np.exp(-z))
     
     def loss_function(self, y_true, y_pred) -> float:
         """
-        TODO: Implement binary cross entropy loss, which assumes that the true labels are either
+        Implement binary cross entropy loss, which assumes that the true labels are either
         0 or 1. (This can be extended to more than two classes, but here we have just two.)
 
         Arguments:
@@ -143,12 +145,14 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             The mean loss (a single number).
         """
-        pass
+        # Clip predictions to avoid log(0) numerical instability
+        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
+        return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
         
     def calculate_gradient(self, y_true, X) -> np.ndarray:
         """
-        TODO: Calculate the gradient of the loss function with respect to the given data. This
-        will be used to update the weights during training.
+        Calculate the gradient of the binary cross-entropy loss with respect to the weights.
+        This will be used to update the weights during training.
 
         Arguments:
             y_true (np.array): True labels.
@@ -157,4 +161,8 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             Vector of gradients.
         """
-        pass
+        # Get current predictions
+        y_pred = self.make_prediction(X)
+        # Gradient of binary cross-entropy w.r.t. weights: (1/n) * X^T * (y_pred - y_true)
+        n = len(y_true)
+        return (X.T @ (y_pred - y_true)) / n
